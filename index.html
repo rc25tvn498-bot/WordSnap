@@ -1,112 +1,580 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영단어 암기 퀴즈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FDF1F6;
+    --panel:#FFFFFF;
+    --panel-border:#F6D6E4;
+    --paper:#FFFFFF;
+    --rose:#DD6E96;
+    --rose-deep:#B94A72;
+    --rose-pale:#F8D6E4;
+    --rose-pale-deep:#7A2C4C;
+    --ink:#43303B;
+    --muted:#B08A97;
+    --muted-soft:#D9B7C4;
+    --mint:#5FAE87;
+    --mint-bg:rgba(95,174,135,0.12);
+    --coral:#DD7482;
+    --coral-bg:rgba(221,116,130,0.12);
+    --line:#F1D9E4;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 10% 6%, rgba(221,110,150,0.10), transparent 42%),
+      radial-gradient(circle at 92% 88%, rgba(95,174,135,0.08), transparent 45%),
+      var(--bg);
+    min-height:100vh;
+    font-family:'Noto Sans KR', sans-serif;
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:40px 16px 80px;
+  }
+  .wrap{width:100%;max-width:560px;}
+  header{text-align:center;margin-bottom:32px;}
+  header .eyebrow{
+    font-size:12px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--rose); font-weight:700; margin-bottom:10px;
+  }
+  header h1{
+    font-family:'Fraunces', serif; font-weight:600;
+    font-size:clamp(28px,5vw,38px); margin:0 0 8px;
+    letter-spacing:-0.01em; color:var(--rose-deep);
+  }
+  header p{color:var(--muted); font-size:14px; margin:0;}
 
-    <title>WordSnap</title>
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:18px;
+    padding:28px;
+    box-shadow:0 12px 30px -18px rgba(185,74,114,0.25);
+  }
+  .panel + .panel{margin-top:20px;}
 
-    <link rel="stylesheet" href="style.css">
+  label.field-label{
+    display:block; font-size:13px; font-weight:500;
+    color:var(--muted); margin-bottom:8px;
+  }
+  textarea{
+    width:100%; min-height:200px; resize:vertical;
+    background:#FFF9FB; color:var(--ink);
+    border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; font-size:14.5px; line-height:1.6;
+    font-family:'Noto Sans KR', monospace;
+    outline:none;
+  }
+  textarea:focus{border-color:var(--rose);}
+  .hint{color:var(--muted); font-size:12.5px; margin-top:10px; line-height:1.6;}
+  .hint code{background:var(--rose-pale); color:var(--rose-pale-deep); padding:1px 6px; border-radius:5px; font-size:12px;}
+  .save-note{color:var(--mint); font-size:12px; margin-top:6px; min-height:16px;}
 
-    <!-- OCR 라이브러리 -->
-    <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+  .btn-row{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;}
+  button{
+    font-family:inherit; font-size:14px; font-weight:500;
+    border-radius:10px; border:1px solid var(--line);
+    padding:12px 18px; cursor:pointer;
+    background:#FFFFFF; color:var(--ink);
+    transition:transform .08s ease, background .15s ease, border-color .15s ease;
+  }
+  button:hover{background:var(--rose-pale);}
+  button:active{transform:scale(0.98);}
+  button:focus-visible{outline:2px solid var(--rose); outline-offset:2px;}
+  button.primary{
+    background:var(--rose); color:#FFFFFF; border-color:var(--rose);
+    font-weight:700;
+  }
+  button.primary:hover{background:var(--rose-deep); border-color:var(--rose-deep);}
+  button.ghost{color:var(--muted); border-color:var(--line); background:transparent;}
+  button:disabled{opacity:0.4; cursor:not-allowed; transform:none;}
+
+  .error-box{
+    margin-top:16px; background:var(--coral-bg);
+    border:1px solid rgba(221,116,130,0.4); border-radius:10px;
+    padding:12px 14px; font-size:13px; color:var(--rose-deep);
+  }
+  .error-box ul{margin:6px 0 0; padding-left:18px;}
+
+  /* ---- quiz screen ---- */
+  .progress-row{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; color:var(--muted); margin-bottom:14px;
+  }
+  .progress-track{
+    height:6px; background:var(--rose-pale); border-radius:99px;
+    overflow:hidden; margin-bottom:26px;
+  }
+  .progress-fill{
+    height:100%; background:var(--rose); border-radius:99px;
+    transition:width .25s ease;
+  }
+
+  .stage{position:relative; height:220px; margin-bottom:22px;}
+  .stack-layer{
+    position:absolute; inset:0; border-radius:16px;
+    background:var(--rose-pale); opacity:0.5;
+  }
+  .stack-layer.l2{transform:translate(10px,10px) rotate(2deg);}
+  .stack-layer.l1{transform:translate(5px,5px) rotate(1deg); opacity:0.7;}
+
+  .card-flip{
+    position:absolute; inset:0; perspective:1200px; cursor:pointer;
+  }
+  .card-inner{
+    position:relative; width:100%; height:100%;
+    transition:transform .5s cubic-bezier(.2,.8,.2,1);
+    transform-style:preserve-3d;
+  }
+  .card-flip.flipped .card-inner{transform:rotateY(180deg);}
+  .card-face{
+    position:absolute; inset:0; border-radius:16px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    padding:20px; text-align:center;
+    border:1px solid var(--line);
+  }
+  .card-front{
+    background:var(--paper); color:var(--ink);
+  }
+  .card-back{
+    background:var(--rose-pale); color:var(--rose-pale-deep);
+    transform:rotateY(180deg);
+  }
+  .word-en{
+    font-family:'Fraunces', serif; font-weight:600;
+    font-size:clamp(24px,5.5vw,32px); word-break:keep-all; overflow-wrap:break-word;
+    line-height:1.3;
+  }
+  .word-en.long{font-size:clamp(19px,4.4vw,24px);}
+  .word-en.longer{font-size:clamp(16px,3.6vw,19px);}
+  .word-mark{
+    font-size:14px; color:var(--muted); margin-top:10px; letter-spacing:0.04em;
+  }
+  .word-kr{
+    font-size:clamp(20px,5vw,26px); font-weight:700;
+    word-break:keep-all; overflow-wrap:break-word; line-height:1.35;
+  }
+  .word-kr.long{font-size:clamp(17px,4.2vw,21px);}
+  .word-kr.longer{font-size:clamp(15px,3.6vw,17px);}
+  .tap-hint{
+    font-size:12px; color:var(--muted); margin-top:14px;
+  }
+
+  .know-row{display:flex; gap:10px;}
+  .know-row button{flex:1; padding:14px; font-size:22px; font-weight:700; line-height:1;}
+  button.know{border-color:rgba(95,174,135,0.5); color:var(--mint);}
+  button.know:hover{background:var(--mint-bg);}
+  button.dontknow{border-color:rgba(221,116,130,0.5); color:var(--coral);}
+  button.dontknow:hover{background:var(--coral-bg);}
+  .know-key-hint{
+    text-align:center; font-size:12px; color:var(--muted); margin-top:8px;
+  }
+
+  .quiz-footer{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:18px; font-size:12.5px; color:var(--muted);
+  }
+  .quiz-footer button{padding:8px 12px; font-size:12.5px;}
+
+  /* ---- summary ---- */
+  .wrong-list{
+    max-height:280px; overflow-y:auto; margin-top:4px;
+    border:1px solid var(--line); border-radius:12px;
+  }
+  .wrong-list .row{
+    display:flex; justify-content:space-between; gap:12px;
+    padding:10px 14px; font-size:13.5px;
+    border-bottom:1px solid var(--line);
+  }
+  .wrong-list .row:last-child{border-bottom:none;}
+  .wrong-list .row .en{font-weight:500; word-break:keep-all;}
+  .wrong-list .row .kr{color:var(--muted); text-align:right; word-break:keep-all;}
+  .empty-note{color:var(--muted); font-size:13.5px; text-align:center; padding:24px 0;}
+
+  .hidden{display:none !important;}
+
+  @media (prefers-reduced-motion: reduce){
+    .card-inner, .progress-fill{transition:none !important;}
+  }
+</style>
 </head>
-
 <body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Flashcard drill</div>
+    <h1>영단어 암기 퀴즈</h1>
+    <p>단어를 입력하고, 뒤집어서 뜻을 확인하세요</p>
+  </header>
 
-<header>
+  <!-- ===== 입력 화면 ===== -->
+  <section id="setupPanel" class="panel">
+    <label class="field-label" for="wordInput">단어 목록 입력</label>
+    <textarea id="wordInput" placeholder="apple - 사과&#10;make up for - 만회하다&#10;beautiful - 아름다운"></textarea>
+    <div class="hint">
+      한 줄에 하나씩, <code>단어(또는 숙어) 공백-하이픈-공백 뜻</code> 형식으로 입력하세요. 예) <code>give up - 포기하다</code>. 숙어나 긴 표현도 이 형식이면 정확히 구분됩니다.
+    </div>
+    <div class="save-note" id="saveNote"></div>
+    <div id="errorBox" class="error-box hidden"></div>
+    <div class="btn-row">
+      <button type="button" class="primary" id="startBtn">퀴즈 시작</button>
+      <button type="button" class="ghost" id="sampleBtn">예시 채우기</button>
+      <button type="button" class="ghost" id="clearBtn">비우기</button>
+    </div>
+  </section>
 
-    <h1>📚 WordSnap</h1>
+  <!-- ===== 퀴즈 화면 ===== -->
+  <section id="quizPanel" class="panel hidden">
+    <div class="progress-row">
+      <span id="progressText">1 / 10</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
-    <p class="subtitle">
-        사진 한 장으로 만드는 나만의 영단어 암기장
-    </p>
-
-</header>
-
-<main>
-
-    <!-- 사진 업로드 -->
-
-    <section class="upload-section">
-
-        <label class="upload-box">
-
-            <input
-                type="file"
-                id="imageInput"
-                accept="image/*">
-
-            <div>
-
-                <span class="camera">
-                    📷
-                </span>
-
-                <h3>
-                    단어장 사진 업로드
-                </h3>
-
-                <p>
-                    손글씨 단어장을 선택하세요.
-                </p>
-
-            </div>
-
-        </label>
-
-    </section>
-
-    <!-- OCR 상태 -->
-
-    <section class="status">
-
-        <p id="statusText">
-            사진을 선택해주세요.
-        </p>
-
-    </section>
-
-    <!-- 랜덤 단어 -->
-
-    <section>
-
-        <div class="title-row">
-
-            <h2>
-                오늘의 단어
-            </h2>
-
-            <button id="shuffleBtn">
-                🎲 랜덤 5개
-            </button>
-
+    <div class="stage">
+      <div class="stack-layer l2"></div>
+      <div class="stack-layer l1"></div>
+      <div class="card-flip" id="cardFlip" role="button" tabindex="0" aria-label="카드를 눌러 정답 확인">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="word-en" id="frontWord">word</div>
+            <div class="word-mark">??</div>
+            <div class="tap-hint">카드를 눌러 정답 확인 (Space)</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="word-kr" id="backWord">뜻</div>
+          </div>
         </div>
+      </div>
+    </div>
 
-        <div id="wordList">
+    <div class="know-row">
+      <button type="button" class="dontknow" id="dontKnowBtn" disabled aria-label="모르는 단어">X</button>
+      <button type="button" class="know" id="knowBtn" disabled aria-label="아는 단어">O</button>
+    </div>
+    <div class="know-key-hint">← 몰라요 (X) · 알아요 (O) →</div>
 
-            <!-- JavaScript가 자동 생성 -->
+    <div class="quiz-footer">
+      <button type="button" class="ghost" id="shuffleBtn">다시 섞기</button>
+      <button type="button" class="ghost" id="exitQuizBtn">그만하기</button>
+    </div>
+  </section>
 
-        </div>
+  <!-- ===== 결과 화면 ===== -->
+  <section id="summaryPanel" class="panel hidden">
+    <label class="field-label">몰랐던 단어</label>
+    <div class="wrong-list" id="wrongList"></div>
+    <div class="btn-row">
+      <button type="button" class="primary" id="retryWrongBtn">오답만 다시 풀기</button>
+      <button type="button" class="ghost" id="retryAllBtn">전체 다시 풀기</button>
+      <button type="button" class="ghost" id="newListBtn">새 단어 입력하기</button>
+    </div>
+  </section>
+</div>
 
-    </section>
+<script>
+(function(){
+  "use strict";
 
-</main>
+  var STORAGE_KEY = 'vocabQuiz.wordListText';
 
-<footer>
+  var setupPanel = document.getElementById('setupPanel');
+  var quizPanel = document.getElementById('quizPanel');
+  var summaryPanel = document.getElementById('summaryPanel');
+  var wordInput = document.getElementById('wordInput');
+  var errorBox = document.getElementById('errorBox');
+  var saveNote = document.getElementById('saveNote');
 
-    <p>
+  var startBtn = document.getElementById('startBtn');
+  var sampleBtn = document.getElementById('sampleBtn');
+  var clearBtn = document.getElementById('clearBtn');
 
-        WordSnap V1
+  var progressText = document.getElementById('progressText');
+  var progressFill = document.getElementById('progressFill');
+  var cardFlip = document.getElementById('cardFlip');
+  var frontWord = document.getElementById('frontWord');
+  var backWord = document.getElementById('backWord');
+  var knowBtn = document.getElementById('knowBtn');
+  var dontKnowBtn = document.getElementById('dontKnowBtn');
+  var shuffleBtn = document.getElementById('shuffleBtn');
+  var exitQuizBtn = document.getElementById('exitQuizBtn');
 
-    </p>
+  var wrongList = document.getElementById('wrongList');
+  var retryWrongBtn = document.getElementById('retryWrongBtn');
+  var retryAllBtn = document.getElementById('retryAllBtn');
+  var newListBtn = document.getElementById('newListBtn');
 
-</footer>
+  var SAMPLE = [
+    'apple - 사과',
+    'give up - 포기하다',
+    'beautiful - 아름다운',
+    'make up for - 만회하다',
+    'well-known - 잘 알려진',
+    'come up with - 생각해내다'
+  ].join('\n');
 
-<script src="storage.js"></script>
-<script src="ocr.js"></script>
-<script src="script.js"></script>
+  // ---- state ----
+  var deck = [];        // 현재 세션의 전체(원본) 단어 목록 {front, back}
+  var queue = [];        // 진행 중인 퀴즈 순서
+  var index = 0;
+  var wrongItems = [];   // 이번 회차에서 몰랐던 단어들
 
+  // ---- storage helpers ----
+  var saveNoteTimer = null;
+  function loadSavedList(){
+    try{
+      var saved = window.localStorage.getItem(STORAGE_KEY);
+      if (saved !== null){
+        wordInput.value = saved;
+      }
+    } catch(e){
+      // localStorage 사용 불가(프라이빗 모드 등) - 조용히 무시
+    }
+  }
+  function persistList(showNote){
+    try{
+      window.localStorage.setItem(STORAGE_KEY, wordInput.value);
+      if (showNote){
+        saveNote.textContent = '저장됨';
+        clearTimeout(saveNoteTimer);
+        saveNoteTimer = setTimeout(function(){ saveNote.textContent=''; }, 1200);
+      }
+    } catch(e){
+      // 저장 실패 시 조용히 무시 (기능은 계속 동작)
+    }
+  }
+
+  // ---- helpers ----
+  function showPanel(panel){
+    [setupPanel, quizPanel, summaryPanel].forEach(function(p){
+      p.classList.add('hidden');
+    });
+    panel.classList.remove('hidden');
+  }
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function parseInput(text){
+    var lines = text.split(/\r?\n/);
+    var results = [];
+    var errors = [];
+
+    lines.forEach(function(raw, i){
+      var line = raw.trim();
+      if (!line) return;
+
+      var front, back, idx;
+
+      // 우선순위 1: "단어 - 뜻" (공백-하이픈-공백) -- 숙어나 하이픈 포함 단어도 안전하게 구분됨
+      idx = line.indexOf(' - ');
+      if (idx !== -1){
+        front = line.slice(0, idx).trim();
+        back = line.slice(idx + 3).trim();
+      } else {
+        // 우선순위 2: 탭 구분
+        idx = line.indexOf('\t');
+        if (idx !== -1){
+          front = line.slice(0, idx).trim();
+          back = line.slice(idx + 1).trim();
+        }
+      }
+
+      if (!front || !back){
+        errors.push({ lineNo: i + 1, text: line });
+        return;
+      }
+      results.push({ front: front, back: back });
+    });
+
+    return { results: results, errors: errors };
+  }
+
+  function renderErrors(errors){
+    if (!errors.length){
+      errorBox.classList.add('hidden');
+      errorBox.innerHTML = '';
+      return;
+    }
+    var html = '인식하지 못한 줄이 있어요. "단어 - 뜻" 형식(공백-하이픈-공백)인지 확인해 주세요.<ul>';
+    errors.forEach(function(e){
+      html += '<li>' + (e.lineNo) + '번째 줄: "' + escapeHtml(e.text) + '"</li>';
+    });
+    html += '</ul>';
+    errorBox.innerHTML = html;
+    errorBox.classList.remove('hidden');
+  }
+
+  function escapeHtml(str){
+    return str.replace(/[&<>"']/g, function(ch){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+    });
+  }
+
+  function lengthClass(str){
+    if (str.length > 24) return 'longer';
+    if (str.length > 12) return 'long';
+    return '';
+  }
+
+  function startQuiz(list){
+    deck = list;
+    queue = shuffle(deck);
+    index = 0;
+    wrongItems = [];
+    showPanel(quizPanel);
+    renderCard();
+  }
+
+  function renderCard(){
+    if (index >= queue.length){
+      finishQuiz();
+      return;
+    }
+    var item = queue[index];
+
+    frontWord.textContent = item.front;
+    frontWord.className = 'word-en ' + lengthClass(item.front);
+
+    backWord.textContent = item.back;
+    backWord.className = 'word-kr ' + lengthClass(item.back);
+
+    cardFlip.classList.remove('flipped');
+    knowBtn.disabled = true;
+    dontKnowBtn.disabled = true;
+
+    progressText.textContent = (index + 1) + ' / ' + queue.length;
+    progressFill.style.width = (index / queue.length * 100) + '%';
+  }
+
+  function revealCard(){
+    if (cardFlip.classList.contains('flipped')) return;
+    cardFlip.classList.add('flipped');
+    knowBtn.disabled = false;
+    dontKnowBtn.disabled = false;
+  }
+
+  function markKnow(isKnown){
+    if (knowBtn.disabled) return; // 아직 뒤집지 않았으면 무시
+    var item = queue[index];
+    if (!isKnown){
+      wrongItems.push(item);
+    }
+    index++;
+    renderCard();
+  }
+
+  function finishQuiz(){
+    showPanel(summaryPanel);
+
+    wrongList.innerHTML = '';
+    if (wrongItems.length === 0){
+      wrongList.innerHTML = '<div class="empty-note">몰랐던 단어가 없어요. 모두 맞혔어요!</div>';
+    } else {
+      wrongItems.forEach(function(item){
+        var row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = '<span class="en">' + escapeHtml(item.front) + '</span>' +
+                         '<span class="kr">' + escapeHtml(item.back) + '</span>';
+        wrongList.appendChild(row);
+      });
+    }
+    retryWrongBtn.disabled = wrongItems.length === 0;
+  }
+
+  // ---- events: setup ----
+  loadSavedList();
+
+  wordInput.addEventListener('input', function(){
+    persistList(false);
+  });
+
+  startBtn.addEventListener('click', function(){
+    persistList(true);
+    var parsed = parseInput(wordInput.value);
+    renderErrors(parsed.errors);
+    if (parsed.results.length === 0){
+      if (!parsed.errors.length){
+        errorBox.innerHTML = '먼저 단어를 한 줄 이상 입력해 주세요.';
+        errorBox.classList.remove('hidden');
+      }
+      return;
+    }
+    startQuiz(parsed.results);
+  });
+
+  sampleBtn.addEventListener('click', function(){
+    wordInput.value = SAMPLE;
+    errorBox.classList.add('hidden');
+    persistList(true);
+  });
+
+  clearBtn.addEventListener('click', function(){
+    wordInput.value = '';
+    errorBox.classList.add('hidden');
+    persistList(true);
+    wordInput.focus();
+  });
+
+  // ---- events: quiz ----
+  cardFlip.addEventListener('click', revealCard);
+  cardFlip.addEventListener('keydown', function(e){
+    if (e.code === 'Space' || e.code === 'Enter'){
+      e.preventDefault();
+      revealCard();
+    }
+  });
+
+  knowBtn.addEventListener('click', function(){ markKnow(true); });
+  dontKnowBtn.addEventListener('click', function(){ markKnow(false); });
+
+  shuffleBtn.addEventListener('click', function(){
+    var remaining = queue.slice(index);
+    var done = queue.slice(0, index);
+    queue = done.concat(shuffle(remaining));
+    renderCard();
+  });
+
+  exitQuizBtn.addEventListener('click', function(){
+    showPanel(setupPanel);
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (quizPanel.classList.contains('hidden')) return;
+    if (e.code === 'ArrowRight'){ markKnow(true); }
+    if (e.code === 'ArrowLeft'){ markKnow(false); }
+  });
+
+  // ---- events: summary ----
+  retryWrongBtn.addEventListener('click', function(){
+    if (wrongItems.length === 0) return;
+    startQuiz(wrongItems.slice());
+  });
+
+  retryAllBtn.addEventListener('click', function(){
+    startQuiz(deck.slice());
+  });
+
+  newListBtn.addEventListener('click', function(){
+    showPanel(setupPanel);
+  });
+
+})();
+</script>
 </body>
 </html>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
