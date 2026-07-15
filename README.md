@@ -1,2 +1,0 @@
-# WordSnap
-word snap
