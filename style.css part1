@@ -299,5 +299,225 @@ font-size:22px;
 width:100%;
 
 }
+/* ==========================
+   WordSnap V1
+   style.css Part 2
+========================== */
+
+/* ---------- Word Card ---------- */
+
+.word-card{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:22px;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+
+    transition:.25s;
+
+    border:2px solid transparent;
+
+}
+
+.word-card:hover{
+
+    transform:translateY(-3px);
+
+    border-color:#2563eb;
+
+}
+
+/* ---------- English Word ---------- */
+
+.word{
+
+    font-size:28px;
+
+    font-weight:700;
+
+    color:#222;
+
+    margin-bottom:18px;
+
+    word-break:break-word;
+
+}
+
+/* ---------- Meaning Button ---------- */
+
+.meaning-btn{
+
+    width:100%;
+
+    background:#2563eb;
+
+    color:white;
+
+    border:none;
+
+    border-radius:12px;
+
+    padding:14px;
+
+    font-size:16px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.meaning-btn:hover{
+
+    background:#1d4ed8;
+
+}
+
+/* ---------- Meaning ---------- */
+
+.meaning{
+
+    display:none;
+
+    margin-top:18px;
+
+    padding:15px;
+
+    background:#eef5ff;
+
+    border-left:5px solid #2563eb;
+
+    border-radius:10px;
+
+    font-size:18px;
+
+    line-height:1.6;
+
+}
+
+/* 뜻이 보일 때 */
+
+.meaning.show{
+
+    display:block;
+
+    animation:fadeIn .25s ease;
+
+}
+
+/* ---------- OCR Loading ---------- */
+
+.loading{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:35px;
+
+    gap:15px;
+
+}
+
+/* 회전 애니메이션 */
+
+.spinner{
+
+    width:55px;
+
+    height:55px;
+
+    border:6px solid #dbeafe;
+
+    border-top:6px solid #2563eb;
+
+    border-radius:50%;
+
+    animation:spin 1s linear infinite;
+
+}
+
+.loading p{
+
+    color:#555;
+
+    font-size:16px;
+
+}
+
+/* ---------- Animation ---------- */
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(-10px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+@keyframes spin{
+
+    from{
+
+        transform:rotate(0deg);
+
+    }
+
+    to{
+
+        transform:rotate(360deg);
+
+    }
+
+}
+
+/* ---------- Mobile ---------- */
+
+@media(max-width:700px){
+
+.word-card{
+
+padding:18px;
+
+}
+
+.word{
+
+font-size:22px;
+
+}
+
+.meaning-btn{
+
+font-size:15px;
+
+padding:12px;
+
+}
+
+.meaning{
+
+font-size:16px;
+
+}
 
 }
